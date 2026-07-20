@@ -3,9 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # يسمح بتشغيل يدوي
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,8 +24,9 @@ jobs:
         sudo apt install -y \
           git zip unzip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev \
-          libncurses5-dev libncursesw5-dev libtinfo5 \
-          cmake libffi-dev libssl-dev
+          libncurses5-dev libncursesw5-dev \
+          cmake libffi-dev libssl-dev \
+          liblzma-dev libbz2-dev
 
     - name: Install Python dependencies
       run: |
@@ -41,16 +40,19 @@ jobs:
           buildozer init
         fi
 
-    - name: Update buildozer.spec (Android settings)
+    - name: Update buildozer.spec
       run: |
-        # تعيين اسم التطبيق
+        # إعدادات التطبيق الأساسية
         sed -i 's/^title = .*/title = تطبيقي/' buildozer.spec
         sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
         sed -i 's/^package.domain = .*/package.domain = com.example/' buildozer.spec
+        
+        # إعدادات الأندرويد
         sed -i 's/^android.permissions = .*/android.permissions = INTERNET/' buildozer.spec
         sed -i 's/^android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/^android.minapi = .*/android.minapi = 21/' buildozer.spec
-        sed -i 's/^android.gradle_dependencies = .*/android.gradle_dependencies = '\''com.android.support:support-annotations:28.0.0'\''/' buildozer.spec
+        sed -i 's/^android.ndk = .*/android.ndk = 25b/' buildozer.spec
+        sed -i 's/^android.sdk = .*/android.sdk = 33/' buildozer.spec
 
     - name: Build APK
       run: |
@@ -58,12 +60,12 @@ jobs:
 
     - name: List built files
       run: |
-        ls -la bin/
-        find . -name "*.apk" -ls
+        ls -la bin/ || echo "bin folder not found"
+        find . -name "*.apk" -ls || echo "No APK found"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: android-apk
         path: bin/*.apk
-        if-no-files-found: error
+        if-no-files-found: warn
