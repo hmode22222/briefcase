@@ -18,56 +18,33 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install system dependencies
+    - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev \
           libncurses5-dev libncursesw5-dev libtinfo5 \
           cmake libffi-dev libssl-dev
-
-    - name: Install Python dependencies
-      run: |
         pip install --upgrade pip
         pip install buildozer cython
 
-    - name: Create and configure buildozer.spec
+    - name: Setup buildozer
       run: |
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
+        [ -f buildozer.spec ] || buildozer init
         sed -i 's/^title = .*/title = تطبيقي/' buildozer.spec
         sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
         sed -i 's/^package.domain = .*/package.domain = com.example/' buildozer.spec
         sed -i 's/^android.permissions = .*/android.permissions = INTERNET/' buildozer.spec
         sed -i 's/^android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/^android.minapi = .*/android.minapi = 21/' buildozer.spec
-        sed -i 's/^android.ndk = .*/android.ndk = 25b/' buildozer.spec
-        sed -i 's/^android.sdk = .*/android.sdk = 33/' buildozer.spec
 
-    - name: Create Android licenses directory
+    - name: Accept licenses and build
       run: |
-        mkdir -p ~/.android
-
-    - name: Accept Android SDK licenses manually
-      run: |
-        cat > ~/.android/licenses/android-sdk-license << 'EOF'
-        8933bad161af4178b1185d1a37fbf41ea5269c55
-        d56f5187479451eabf01fb78af6dfcb131a6481e
-        84831b9409646a918e30573bab4c9c91346d8abd
-        EOF
+        # محاولة البناء مع قبول التراخيص
+        buildozer android debug deploy run || true
         
-        cat > ~/.android/licenses/android-sdk-preview-license << 'EOF'
-        84831b9409646a918e30573bab4c9c91346d8abd
-        EOF
-        
-        cat > ~/.android/licenses/google-gdk-license << 'EOF'
-        33b6a2b64607f11b759f320ef9dff4ae5c47d97a
-        EOF
-
-    - name: Build APK
-      run: |
-        buildozer -v android debug deploy run
+        # إذا فشل، حاول مرة أخرى مع yes
+        yes | buildozer android debug deploy run
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
