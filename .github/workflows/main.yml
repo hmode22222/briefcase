@@ -1,19 +1,69 @@
 name: Build Android APK
 
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # يسمح بتشغيل يدوي
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install briefcase
-      - run: briefcase create android
-      - run: briefcase build android
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: android/**/*.apk
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          git zip unzip openjdk-17-jdk \
+          autoconf libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo5 \
+          cmake libffi-dev libssl-dev
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install buildozer cython
+        pip install -r requirements.txt || true
+
+    - name: Create buildozer.spec
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
+
+    - name: Update buildozer.spec (Android settings)
+      run: |
+        # تعيين اسم التطبيق
+        sed -i 's/^title = .*/title = تطبيقي/' buildozer.spec
+        sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
+        sed -i 's/^package.domain = .*/package.domain = com.example/' buildozer.spec
+        sed -i 's/^android.permissions = .*/android.permissions = INTERNET/' buildozer.spec
+        sed -i 's/^android.api = .*/android.api = 33/' buildozer.spec
+        sed -i 's/^android.minapi = .*/android.minapi = 21/' buildozer.spec
+        sed -i 's/^android.gradle_dependencies = .*/android.gradle_dependencies = '\''com.android.support:support-annotations:28.0.0'\''/' buildozer.spec
+
+    - name: Build APK
+      run: |
+        buildozer -v android debug deploy run
+
+    - name: List built files
+      run: |
+        ls -la bin/
+        find . -name "*.apk" -ls
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: bin/*.apk
+        if-no-files-found: error
