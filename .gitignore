@@ -1,60 +1,14 @@
-# MkDocs
-_build
-comment.md
-
-*.pyc
-*~
-.*.sw[op]
-*.egg-info
-/dist
 /build
-automation/build
-debugger/build
-docs/_build/
-distribute-*
-.DS_Store
-.python-version
-.pytest_cache
-.coverage
-.coverage.*
-coverage.xml
-venv*
-.vscode/
-.eggs/
-.tox/
-/local
-__pycache__/
-.ruff_cache/
-
-/pip-wheel-metadata
-# IntelliJ Idea family of suites
-.idea
+/.gradle
+/local.properties
+/.idea
 *.iml
-## File-based project format:
-*.ipr
-*.iws
-## mpeltonen/sbt-idea plugin
-.idea_modules/
-# direnv
-.envrc
-
-# Wing IDE
-*.wp[ur]
-
-tests/apps/verify-*/
-logs/
-
-# AI tooling (SpecKit v0.8.0)
-.opencode/
-.specify/scripts
-.specify/templates
-.specify/extensions.yml
-.specify/extensions
-.specify/feature.json
-.specify/init-options.json
-.specify/integration.json
-.specify/integrations
-.specify/workflows
-.specify/workflow.yml
-/specs/
-/docs/superpowers/
+/.idea/
+/.DS_Store
+/captures
+.externalNativeBuild
+/app/build
+/gradle-app.setting
+.gradle
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
