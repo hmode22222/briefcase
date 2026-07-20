@@ -49,11 +49,42 @@ jobs:
         sed -i 's/^android.ndk = .*/android.ndk = 25b/' buildozer.spec
         sed -i 's/^android.sdk = .*/android.sdk = 33/' buildozer.spec
 
-    - name: Accept Android SDK licenses
+    - name: Create Android licenses directory
       run: |
         mkdir -p ~/.android
-        echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/license
-        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+    - name: Accept Android SDK licenses manually
+      run: |
+        # إنشاء ملف التراخيص يدوياً
+        cat > ~/.android/licenses/android-sdk-license << 'EOF'
+        8933bad161af4178b1185d1a37fbf41ea5269c55
+        d56f5187479451eabf01fb78af6dfcb131a6481e
+        84831b9409646a918e30573bab4c9c91346d8abd
+        EOF
+        
+        cat > ~/.android/licenses/android-sdk-preview-license << 'EOF'
+        84831b9409646a918e30573bab4c9c91346d8abd
+        EOF
+        
+        cat > ~/.android/licenses/google-gdk-license << 'EOF'
+        33b6a2b64607f11b759f320ef9dff4ae5c47d97a
+        EOF
+
+    - name: Accept all licenses with sdkmanager
+      run: |
+        # تنزيل sdkmanager إذا لم يكن موجوداً
+        if [ ! -d ~/.buildozer/android/platform/android-sdk ]; then
+          mkdir -p ~/.buildozer/android/platform/
+          cd ~/.buildozer/android/platform/
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools android-sdk/cmdline-tools/latest
+          cd -
+        fi
+        
+        # قبول جميع التراخيص
+        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
 
     - name: Build APK
       run: |
